@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/img">
+        <file>img/odd.svg</file>
+        <file>img/on.svg</file>
+        <file>img/off.svg</file>
+    </qresource>
+    <qresource prefix="/db">
+        <file>script.sql</file>
+    </qresource>
+</RCC>

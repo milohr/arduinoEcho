@@ -1,0 +1,147 @@
+<html>
+    <head>
+        <title>Echo Client</title>
+           <meta charset="UTF-8">
+    </head>
+    <body>
+        <h1>Echo Client</h1>
+        <p>
+            <button onClick="initWebSocket();">Connect</button>
+            <button onClick="stopWebSocket();">Disconnect</button>
+            <button onClick="checkSocket();">State</button>
+        </p>
+
+        <p>
+            <h3> Props: </h3>
+            <hr>
+            <form>
+                Distance: <br> <input id="distance" type="number" value="100" min="5" max="150" step="1" required>
+                <br>
+                Luminosity: <br><input id="luminosity" type="number" value="300" min="80" max="1000" step="1" required>
+                <br>
+                Interval: <br><input id="interval" type="number" value="2500" min="500" max="10000" step="1" required>
+
+            </form>
+            <button onClick="sendData();">Update</button>
+
+        </p>
+        <p>
+            <h3> Console: </h3>
+            <hr>
+            <textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
+        </p>
+        <p>
+            <input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessage();"/>
+            <button onClick="sendMessage();">Send</button>
+        </p>
+
+        <script src="ip.js"></script>
+        <script type="text/javascript">
+
+
+            var debugTextArea = document.getElementById("debugTextArea");
+            var wsUri = "ws://localhost:1234";
+
+            getUserIP(function(ip)
+            {
+                wsUri= "ws://10.100.110.196:1234";
+                debugTextArea.value += wsUri + "\n";
+            });
+
+            var websocket = null;
+
+            function debug(message)
+            {
+                debugTextArea.value += message + "\n";
+                debugTextArea.scrollTop = debugTextArea.scrollHeight;
+            }
+
+            function sendData()
+            {
+                var distance = document.getElementById("distance").value;
+                var luminosity = document.getElementById("luminosity").value;
+                var interval = document.getElementById("interval").value;
+
+                var msg = "DISTANCE#"+distance+","+"LUMINOSITY#"+luminosity+","+"INTERVAL#"+interval;
+                if ( websocket != null )
+                {
+                    document.getElementById("inputText").value = "";
+                    websocket.send( msg );
+                    console.log( "string sent :", '"'+msg+'"' );
+                }
+            }
+
+            function sendMessage()
+            {
+                var msg = document.getElementById("inputText").value;
+                if ( websocket != null )
+                {
+                    document.getElementById("inputText").value = "";
+                    websocket.send( msg );
+                    console.log( "string sent :", '"'+msg+'"' );
+                }
+            }
+
+            function initWebSocket() {
+                try {
+                    if (typeof MozWebSocket == 'function')
+                        WebSocket = MozWebSocket;
+                    if ( websocket && websocket.readyState == 1 )
+                        websocket.close();
+                    websocket = new WebSocket( wsUri );
+                    websocket.onopen = function (evt) {
+                        debug("CONNECTED");
+                    };
+                    websocket.onclose = function (evt) {
+                        debug("DISCONNECTED");
+                    };
+                    websocket.onmessage = function (evt) {
+                        console.log( "Message received :", evt.data );
+                        debug( evt.data );
+                    };
+                    websocket.onerror = function (evt) {
+                        debug('ERROR: ' + evt.data);
+                    };
+                } catch (exception) {
+                    debug('ERROR: ' + exception);
+                }
+            }
+
+            function stopWebSocket() {
+                if (websocket)
+                    websocket.close();
+            }
+
+            function checkSocket() {
+                if (websocket != null) {
+                    var stateStr;
+                    switch (websocket.readyState) {
+                        case 0: {
+                            stateStr = "CONNECTING";
+                            break;
+                        }
+                        case 1: {
+                            stateStr = "OPEN";
+                            break;
+                        }
+                        case 2: {
+                            stateStr = "CLOSING";
+                            break;
+                        }
+                        case 3: {
+                            stateStr = "CLOSED";
+                            break;
+                        }
+                        default: {
+                            stateStr = "UNKNOW";
+                            break;
+                        }
+                    }
+                    debug("WebSocket state = " + websocket.readyState + " ( " + stateStr + " )");
+                } else {
+                    debug("WebSocket is null");
+                }
+            }
+        </script>
+    </body>
+</html>
